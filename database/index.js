@@ -1,5 +1,6 @@
 const dotenv = require("dotenv");
 const mysql = require("mysql2");
+const _Error = require('../handlers/Error.class');
 
 dotenv.config();
 
@@ -8,16 +9,16 @@ dotenv.config();
 // THE MYSQL DATABASE
 const MySQLToHTTPMap = Object.freeze({
     ER_TRUNCATED_WRONG_VALUE_FOR_FIELD: 422,
-    ER_DUP_ENTRY: 409
+    ER_DUP_ENTRY: 409,
 });
 
-class Database {
+class _Database {
     constructor() {
         this.conn = mysql.createPool({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            database: process.env.DB_DATABASE
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASS || '',
+            database: process.env.DB_DATABASE || 'kliqr_trends'
         });
         this.testConnection();
     };
@@ -29,13 +30,16 @@ class Database {
                 // SO...
                 switch(err.code) {
                     case "PROTOCOL_CONNECTION_REFUSED":
-                        
+                        _Error.log("#/db/index.js", "The connection to the database was destroyed.");
                         break;
                     case "ECONNREFUSED":
-
+                        _Error.log("#/db/index.js", "The connection to the database was either rejected or didn't go through. Is the database server online?");
                         break;
                     case "ER_CON_COUNT_ERROR":
-
+                        _Error.log(`The number of connections to the database has exceeded its limit.`);
+                        break;
+                    case "ENOTFOUND":
+                        _Error.log("The remote database host was not found");
                         break;
                 };
             }
@@ -55,7 +59,8 @@ class Database {
                 
                 resolve(result);
             };
-            this.conn.execute(sql, values, callback);
+            let tmp_conn = new _Database();
+            tmp_conn.conn.execute(sql, values, callback);
 
         }).catch(databaseError => {
             // CREATE AN ARRAY OF POSSIBLE DATABASE ERRORS AT THIS POINT 
@@ -77,4 +82,4 @@ class Database {
     };
 };
 
-module.exports = new Database().query;
+module.exports = new _Database().query;

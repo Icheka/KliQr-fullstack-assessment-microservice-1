@@ -29,7 +29,8 @@ class _Http {
             400: "Malformed Request",
             401: "Unauthorized: Bearer token verification failed",
             409: "Conflict",
-            402: "Unauthorized: Authorization header(s) absent in request"
+            402: "Unauthorized: Authorization header(s) absent in request",
+            417: "Expectation failed"
         };
 
         const headers_array = Object.keys(headers);
@@ -57,7 +58,7 @@ class _Http {
     log(obj, type) {
         if (type == undefined) {
             // throw new Error("<type> cannot be undefined!");
-            
+
             return;
         }
         if (typeof obj !== 'object') {
